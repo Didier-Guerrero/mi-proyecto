@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build_and_test:
     docker:
-      - image: cimg/python:3.12  # Usa imagen con Python preinstalado
+      - image: cimg/python:3.12  # Imagen oficial con Python preinstalado
 
     environment:
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -27,10 +27,14 @@ jobs:
             pip install -r requirements.txt
 
       - run:
-          name: Ejecutar pruebas y generar cobertura
+          name: Ejecutar pruebas con cobertura
           command: |
             . venv/bin/activate
-            pytest --maxfail=1 --disable-warnings --cov=app --cov-report=xml --html=pytest_report.html --self-contained-html
+            mkdir -p test-results
+            pytest --maxfail=1 --disable-warnings \
+                   --cov=app --cov-report=xml \
+                   --junitxml=test-results/results.xml \
+                   --html=pytest_report.html --self-contained-html
 
       - run:
           name: Análisis de calidad del código
@@ -45,6 +49,7 @@ jobs:
             . venv/bin/activate
             bandit -r app -f txt -o bandit-report.txt || true
 
+      # Guardar reportes generados
       - store_artifacts:
           path: pytest_report.html
           destination: pytest_report.html
@@ -61,9 +66,13 @@ jobs:
           path: bandit-report.txt
           destination: bandit-report.txt
 
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage.xml
+
+      # Subir resultados válidos de pruebas (JUnit XML)
       - store_test_results:
-          path: .
-          when: always
+          path: test-results
 
 workflows:
   version: 2
