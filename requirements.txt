@@ -1,0 +1,9 @@
+flask
+pytest
+pytest-cov
+pytest-html
+flake8
+flake8-html
+pylint
+bandit
+requests
